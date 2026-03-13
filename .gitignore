@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Godot
+.godot/
+*.import
+export_presets.cfg
+
+# VS Code
+.vscode/
