@@ -1,85 +1,100 @@
-# AI Immersive Role-Playing Agent System (AIRPA)
-> **專案規格與架構設計**
+# AI Immersive RPG Agent (AIRPG)
 
-## 1. 專案概述
-本專案旨在建構一個高互動性的 AI 角色扮演對話系統。區別於一般的 Chatbot，本系統結合 **RAG** 技術，使 AI 角色能夠嚴格遵循特定的「世界觀設定集 (World Bible)」與使用者互動，並透過 **Godot Engine** 提供沉浸式的 Web 前端體驗。
-
-### 核心目標
-*   **前後端分離架構**: 前端負責互動展演，後端負責 AI 邏輯與狀態管理。
-*   **上下文感知**: 利用 RAG 技術解決 LLM 的幻覺問題，確保角色對話符合設定。
-*   **沉浸式體驗**: 透過 Godot Web Export 提供比傳統網頁更豐富的視覺與動態回饋。
+一個以 **AI 驅動的沉浸式角色扮演對話系統**，透過 RAG 技術讓 AI 角色嚴格依照「世界觀設定集 (World Bible)」與玩家互動，並以 Godot Engine 提供豐富的前端體驗。
 
 ---
 
-## 2. 系統架構
-本系統採用 **Client-Server** 架構。
+## 系統架構
 
-### 架構圖
 ```mermaid
 graph TD
-    User -->|操作| Dashboard[Launcher: Dashboard UI]
-    Dashboard -->|管理| API[後端: FastAPI Server]
-    User -->|互動| Client[遊戲前端: Godot Web App]
+    User([使用者]) -->|操作| Dashboard[Launcher Dashboard]
+    Dashboard -->|管理| API[FastAPI 後端]
+    User -->|互動| Client[Godot 前端]
     Client -->|HTTP POST| API
-    
+
     subgraph "後端服務 (Python)"
         API -->|1. 查詢上下文| RAG[RAG Engine]
-        API -->|4. 生成回應| LLM[LLM Service (Ollama/OpenAI/Anthropic/Google)]
-        
+        API -->|4. 生成回應| LLM[LLM Service]
         RAG -->|2. 向量檢索| VectorDB[(ChromaDB)]
         RAG -->|3. 注入 Prompt| LLM
     end
-    
-    VectorDB <-->|預處理: Embedding| WorldData[世界觀設定檔]
+
+    VectorDB <-->|Embedding 預處理| WorldData[世界觀設定檔]
 ```
 
 ### 技術堆疊
-| 模組 | 技術選型 | 用途說明 |
-| :--- | :--- | :--- |
-| **前端** | Godot Engine 4.4 | 負責 UI 呈現、動畫效果、HTTP 請求處理。 |
-| **後端** | Python 3.10+ | 核心邏輯基礎語言。 |
-| **API 框架** | FastAPI | 提供高效能的 RESTful API 端點。 |
-| **LLM 編排** | LangChain / LlamaIndex | 負責 Prompt Template 管理與 RAG 流程串接。 |
-| **向量資料庫** | ChromaDB | 本地端輕量級向量資料庫，儲存知識嵌入。 |
-| **模型推理** | Ollama (本地) / OpenAI API | 提供 LLM 推論與 Embedding 能力。<br>建議模型：<br>對話：`llama3`, `mistral`<br>嵌入：`nomic-embed-text` |
+
+| 模組 | 技術 |
+| :--- | :--- |
+| 前端 | Godot Engine 4.4 |
+| 後端框架 | Python 3.10+ / FastAPI |
+| LLM 編排 | LangChain (LCEL) |
+| 向量資料庫 | ChromaDB |
+| 模型推論 | Ollama (本地) / OpenAI / Anthropic / Google |
+| 嵌入模型 | `nomic-embed-text` (via Ollama) |
 
 ---
 
-## 3. 功能需求
+## 快速啟動
 
-### 3.1 前端功能
-1.  **對話介面**: 包含對話歷史顯示區、使用者輸入框 (LineEdit)、發送按鈕。
-2.  **狀態顯示**: 顯示 AI 當前狀態 (思考中、輸入中、閒置)。
-3.  **網路通訊**: 使用 `HTTPRequest` 節點發送資料至後端 API。
-4.  **錯誤處理**: 當 API 連線失敗或逾時時，顯示重試提示。
+### 前置需求
 
-### 3.2 後端功能
-1.  **API 端點**: 提供 `/chat` 與 `/health` 接口。
-2.  **RAG 流程**:
-    *   **知識導入**: 啟動時自動讀取世界觀設定，進行文字切塊並存入向量庫。
-    *   **檢索**: 根據使用者輸入，檢索最相關的世界觀片段。
-3.  **記憶管理**: 暫存對話歷史，使 AI 能夠維持對話上下文。
-4.  **提示工程**: 動態組合系統指令、背景知識與使用者輸入。
+- **Python** 3.10+
+- **Godot** 4.4+
+- **Ollama** 已安裝並下載以下模型：
+  - 對話模型：`llama3`（或自選）
+  - 嵌入模型：`nomic-embed-text`（RAG 必要）
+
+### 使用 Launcher 啟動（推薦）
+
+```mermaid
+graph LR
+    A([雙擊 start_dev.bat]) --> B[Launcher 控制台啟動]
+    B --> C[瀏覽器開啟 Dashboard]
+    C -->|設定模型 & 點擊啟動| D[FastAPI 後端啟動]
+```
+
+1. 雙擊根目錄的 `start_dev.bat`
+2. 瀏覽器自動開啟 `localhost:8080`（Launcher Dashboard）
+3. 在 Dashboard 設定 AI 供應商與模型
+4. 點擊「啟動伺服器」，待日誌顯示成功後點擊「進入遊戲」
+
+若要停止所有服務，雙擊 `stop_dev.bat`。
+
+### 手動啟動（開發者）
+
+```bash
+# 1. 複製環境變數範本並填入 API Key
+cp server/.env.example server/.env
+
+# 2. 啟動後端
+cd server
+.\venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+前端請用 Godot Engine 開啟 `client/` 資料夾，按 `F5` 執行，或匯出為 Web (HTML5) 格式。
 
 ---
 
-## 4. API 規格
-後端伺服器預設運行於 `http://localhost:8000`。
+## API 規格
 
-### 4.1 對話請求
-*   **端點**: `POST /api/v1/chat`
-*   **Content-Type**: `application/json`
+後端預設運行於 `http://localhost:8000`。
 
-#### 請求主體 (Request Body)
+### `POST /api/v1/chat`
+
+**請求：**
 ```json
 {
   "user_id": "player_001",
-  "message": "請問這座森林的歷史是什麼？",
+  "message": "這座森林的歷史是什麼？",
   "character_id": "elf_ranger"
 }
 ```
 
-#### 回應主體 (Success 200)
+**成功回應 (200)：**
 ```json
 {
   "response": "這座森林名為『蒼翠之森』，在三百年前的大戰中...",
@@ -88,7 +103,7 @@ graph TD
 }
 ```
 
-#### 回應主體 (Error 500)
+**錯誤回應 (500)：**
 ```json
 {
   "error": "LLM Service Unavailable"
@@ -97,80 +112,44 @@ graph TD
 
 ---
 
-## 5. 資料流設計
+## 開發進度
 
-### 知識庫處理流程
-1.  **加載**: 讀取世界觀文件。
-2.  **切分**: 使用 `RecursiveCharacterTextSplitter` 將文本切分為 500-1000 tokens 的區塊。
-3.  **嵌入**: 將文字轉為向量。
-4.  **存儲**: 存入 ChromaDB 持久化存儲。
+### 第一階段：後端核心
+- [x] Python 環境配置 (venv)
+- [x] FastAPI 核心（`main.py`、`/health`、`POST /api/v1/chat`）
+- [x] RAG 引擎整合（LangChain + ChromaDB + `nomic-embed-text`）
+- [x] 知識庫處理（`ingest.py` 支援 `.md` 文件）
 
-### 推論流程
-當收到使用者訊息時：
-1.  **搜索**: 在 ChromaDB 搜尋相似度最高的相關片段。
-2.  **建構提示**:
-    ```text
-    系統指令: 你是 [角色名稱]，請依據以下世界觀回答問題，並保持角色語氣。
+### 第二階段：開發工具管理
+- [x] 一鍵啟動 / 停止腳本（`start_dev.bat` / `stop_dev.bat`）
+- [x] Ollama 自動診斷、啟動與模型下載
+- [x] Launcher Dashboard（進程管理、模型切換、日誌檢視）
+- [x] 環境變數安全管理（`.env`）
 
-    參考資料:
-    {Context}
+### 第三階段：前端整合與容器化 (第一版目標)
+- [ ] Godot 基礎通訊建置 (HTTPRequest)
+- [ ] 基本 UI 介面實作 (對話框、角色狀態)
+- [ ] **Docker 容器化部署** (Dockerfile & docker-compose)
+- [ ] 全系統整合測試
 
-    使用者問題:
-    {UserQuery}
-    ```
-3.  **生成**: 送入 LLM 生成回應。
-4.  **回傳**: 回傳文字與表情狀態給前端。
+### 第四階段：進階功能開發
+- [ ] **長期記憶支援** (SQLite 儲存歷史上下文)
+- [ ] 對話檢索優化 (調優 RAG 精度)
+- [ ] 知識庫上傳管理介面
 
----
-
-## 6. 開發路線圖
-### 第一階段：基礎建設
-- [x] **Python 環境配置**: 建立虛擬環境 (venv) 並管理套件。
-- [/] **FastAPI 核心**: 架設伺服器並實作基礎 Health Check 接口。
-
-
-### 第二階段：核心邏輯實作
-- [x] **RAG 引擎整合**: 已導入 LangChain 與 ChromaDB 並完成 Ingestion 修復。
-- [x] **知識庫處理**: 實作 `ingest.py` 支援 `.md` 文檔，完成向量化腳本開發。
-- [ ] **對話檢索優化**: 驗證 API 能精確檢索並根據世界觀回傳內容。
-- [ ] **長期記憶**: 支援對話歷史管理，維持連貫脈絡。
-
-### 第三階段：前端開發
-- [ ] **Godot 基礎通訊**: 建立基本 UI，完成與後端 API 的初步對接。
-- [ ] **感官優化**: 實作 Godot 對話框與打字機動效，優化Latency。
-
-### 第四階段：部署
-- [ ] **容器化部署**: 撰寫 Dockerfile 與 docker-compose 配置文件。
+### 第五階段：體驗展演優化
+- [ ] Godot UI/UX 與動效精雕
+- [ ] 串流回傳 (Streaming SSE)
+- [ ] 指令解析 (AI 控制遊戲狀態 JSON)
 
 ---
 
-## 7. 安裝與執行
+## 文件
 
-### 前置需求
-*   **Python**: 3.10+
-*   **Godot**: 4.2+
-*   **Ollama**: 已安裝並下載必要模型：
-    *   推論模型：`llama3` (或自選)
-    *   嵌入模型：`nomic-embed-text` (RAG 核心需求)
-
-### 快速啟動 (推薦)
-針對初學者與快速展示，我們提供了一鍵式 Launcher Dashboard：
-
-1.  **啟動控制台**: 雙擊專案根目錄的 `start_dev.bat`。
-2.  **設定模型**: 系統會自動開啟瀏覽器介面 (`localhost:8080`)。在此設定您的 AI 供應商 (Ollama/OpenAI 等)。
-3.  **啟動服務**: 在介面中點擊「啟動伺服器」。
-4.  **進入遊戲**: 待日誌顯示啟動成功後，點擊「進入遊戲」。
-
-### 手動安裝與執行 (開發者)
-1.  **環境變數**: 將 `server/.env.example` 複製並命名為 `.env`，填入必要的 API Key。
-2.  **啟動後端**:
-```bash
-cd server
-.\venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-### 啟動前端
-1.  使用 **Godot Engine** 開啟專案資料夾。
-2.  按下 `F5` 鍵直接執行專案，或匯出為 **Web (HTML5)** 格式。
+| 文件 | 說明 |
+| :--- | :--- |
+| [backend_dev_guide.md](docs/backend_dev_guide.md) | 後端開發與架構說明 |
+| [design_rationale.md](docs/design_rationale.md) | 技術選型與設計決策 |
+| [rag_dev_guide.md](docs/rag_dev_guide.md) | RAG 引擎開發指南 |
+| [memory_strategy.md](docs/memory_strategy.md) | 長期記憶策略規劃 |
+| [todo.md](docs/todo.md) | 詳細任務清單 |

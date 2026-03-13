@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 REM ==========================================
 REM    AIRPG Backend Service (FastAPI)
-REM =================-------------------------
+REM ==========================================
 
 REM 1. Check/Create Environment
 if not exist "venv" (
