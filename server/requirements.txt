@@ -4,4 +4,8 @@ langchain
 langchain-community
 langchain-chroma
 langchain-ollama
+langchain-openai
+langchain-anthropic
+langchain-google-genai
 chromadb
+python-dotenv

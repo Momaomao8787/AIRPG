@@ -19,10 +19,22 @@
 - [ ] 對話檢索優化 (實際對話測試)
 - [ ] 長期記憶支援
 
-## 第三階段：體驗優化與部署
+## 第三階段：開發體驗與部署
+- [x] **開發體驗優化**
+    - [x] 一鍵啟動腳本 (`start_dev.bat`)
+    - [x] Ollama 自動診斷與啟動服務
+    - [x] 模型自動下載同步 (`pull`)
+    - [x] 一鍵停止腳本 (`stop_dev.bat`)
+    - [x] 環境變數安全管理 (`.env` 整合)
 - [ ] Godot UI/UX 優化
 - [ ] 容器化 (Docker)
 
-## 文件
-- [x] `dev_plan/backend_dev_guide.md` - 後端開發教學文件
+## 第四階段：Launcher 控制台
+- [x] `launcher/launcher_server.py` - 進程管理 API 伺服器
+- [x] `launcher/dashboard.html` - Glassmorphism 風格管理介面
+- [x] 多供應商模型切換：LLM (Ollama/OpenAI/Anthropic/Google) + Embedding
+- [x] 儀表板功能：啟動/停止、知識庫管理、即時日誌、進入遊戲
 
+- [x] `docs/backend_dev_guide.md` - 後端開發教學文件
+- [x] `docs/design_rationale.md` - 技術選型與設計決策說明
+- [x] 全系統整合測試與文件同步完成

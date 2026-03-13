@@ -17,12 +17,14 @@
 ### 架構圖
 ```mermaid
 graph TD
-    User -->|操作| Client[前端: Godot Web App]
-    Client -->|HTTP POST (JSON)| API[後端: FastAPI Server]
+    User -->|操作| Dashboard[Launcher: Dashboard UI]
+    Dashboard -->|管理| API[後端: FastAPI Server]
+    User -->|互動| Client[遊戲前端: Godot Web App]
+    Client -->|HTTP POST| API
     
     subgraph "後端服務 (Python)"
         API -->|1. 查詢上下文| RAG[RAG Engine]
-        API -->|4. 生成回應| LLM[LLM Service (Ollama/OpenAI)]
+        API -->|4. 生成回應| LLM[LLM Service (Ollama/OpenAI/Anthropic/Google)]
         
         RAG -->|2. 向量檢索| VectorDB[(ChromaDB)]
         RAG -->|3. 注入 Prompt| LLM
@@ -151,19 +153,21 @@ graph TD
     *   推論模型：`llama3` (或自選)
     *   嵌入模型：`nomic-embed-text` (RAG 核心需求)
 
-### 啟動後端
+### 快速啟動 (推薦)
+針對初學者與快速展示，我們提供了一鍵式 Launcher Dashboard：
+
+1.  **啟動控制台**: 雙擊專案根目錄的 `start_dev.bat`。
+2.  **設定模型**: 系統會自動開啟瀏覽器介面 (`localhost:8080`)。在此設定您的 AI 供應商 (Ollama/OpenAI 等)。
+3.  **啟動服務**: 在介面中點擊「啟動伺服器」。
+4.  **進入遊戲**: 待日誌顯示啟動成功後，點擊「進入遊戲」。
+
+### 手動安裝與執行 (開發者)
+1.  **環境變數**: 將 `server/.env.example` 複製並命名為 `.env`，填入必要的 API Key。
+2.  **啟動後端**:
 ```bash
-# 1. 建立並啟動虛擬環境
-python -m venv venv
-# Windows:
+cd server
 .\venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
-
-# 2. 安裝必要套件
 pip install -r requirements.txt
-
-# 3. 執行開發伺服器
 uvicorn main:app --reload
 ```
 

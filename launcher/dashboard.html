@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIRPG Control Center</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg-primary: #0a0d1a;
+    --bg-secondary: #0f1328;
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent-purple: #7c3aed;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.10) 0%, transparent 50%);
+  }
+
+  /* ---- Header ---- */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .logo-text span { font-size: 11px; color: var(--text-muted); }
+
+  .header-status { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-red);
+    box-shadow: 0 0 8px var(--accent-red);
+    transition: all 0.3s;
+  }
+  .status-dot.online { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+  #status-text { color: var(--text-secondary); }
+
+  /* ---- Layout ---- */
+  .main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    padding: 28px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 20px; }
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px;
+    backdrop-filter: blur(10px);
+  }
+
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .icon-purple { background: rgba(124,58,237,0.2); }
+  .icon-blue { background: rgba(59,130,246,0.2); }
+  .icon-green { background: rgba(16,185,129,0.2); }
+  .icon-yellow { background: rgba(245,158,11,0.2); }
+  .card-title { font-size: 14px; font-weight: 600; }
+
+  /* ---- Form elements ---- */
+  label {
+    display: block; font-size: 12px; font-weight: 500;
+    color: var(--text-secondary); margin-bottom: 6px; margin-top: 14px;
+  }
+  label:first-of-type { margin-top: 0; }
+
+  select, input[type="text"], input[type="password"] {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select { cursor: pointer; }
+  select option { background: #1e2847; }
+
+  select:focus, input:focus {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  }
+
+  select:disabled, input:disabled {
+    opacity: 0.35; cursor: not-allowed;
+  }
+
+  /* ---- Buttons ---- */
+  .btn {
+    border: none; border-radius: 8px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 13px; padding: 9px 16px;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent-purple); color: #fff;
+    box-shadow: 0 0 20px rgba(124,58,237,0.3);
+  }
+  .btn-primary:hover { background: #6d28d9; box-shadow: 0 0 28px rgba(124,58,237,0.5); }
+
+  .btn-success {
+    background: var(--accent-green); color: #fff;
+    box-shadow: 0 0 20px rgba(16,185,129,0.3);
+  }
+  .btn-success:hover { background: #059669; }
+
+  .btn-danger {
+    background: var(--accent-red); color: #fff;
+    box-shadow: 0 0 20px rgba(239,68,68,0.3);
+  }
+  .btn-danger:hover { background: #dc2626; }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08); color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+  .btn-blue {
+    background: var(--accent-blue); color: #fff;
+    box-shadow: 0 0 20px rgba(59,130,246,0.3);
+  }
+  .btn-blue:hover { background: #2563eb; }
+
+  .btn:disabled {
+    opacity: 0.4; cursor: not-allowed; transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .btn-full { width: 100%; justify-content: center; padding: 12px; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ---- Server Control ---- */
+  .server-control {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .server-control .btn { padding: 14px; font-size: 14px; }
+
+  /* ---- Warnings ---- */
+  .warning-box {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; color: #fbbf24; margin-top: 12px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .warning-box span { margin-top: 1px; }
+
+  /* ---- File List ---- */
+  .file-list {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 14px; max-height: 140px; overflow-y: auto;
+  }
+  .file-item {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; color: var(--text-secondary);
+  }
+  .file-item .file-icon { color: #60a5fa; font-size: 14px; }
+
+  /* ---- Console ---- */
+  .console {
+    background: rgba(0,0,0,0.4); border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; color: #4ade80;
+    padding: 12px 14px;
+    height: 240px; overflow-y: auto;
+    line-height: 1.7; white-space: pre-wrap;
+  }
+  .console::-webkit-scrollbar { width: 4px; }
+  .console::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  .console-line-err { color: #f87171; }
+  .console-line-warn { color: #fbbf24; }
+  .console-line-info { color: #60a5fa; }
+
+  /* ---- Progress ---- */
+  .progress-bar-wrap { margin-top: 10px; display: none; }
+  .progress-bar-wrap.show { display: block; }
+  .progress-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+  .progress-bar {
+    width: 100%; height: 4px;
+    background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+    border-radius: 4px; transition: width 0.4s;
+    animation: progress-pulse 2s infinite;
+  }
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.6; }
+  }
+
+  /* ---- Open Game Button ---- */
+  .btn-game {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    color: #fff; font-size: 15px; padding: 16px;
+    box-shadow: 0 0 40px rgba(124,58,237,0.4);
+    border-radius: 12px;
+  }
+  .btn-game:hover { box-shadow: 0 0 56px rgba(124,58,237,0.6); }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: rgba(30,40,80,0.95);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 13px; backdrop-filter: blur(12px);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s; pointer-events: none; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: rgba(16,185,129,0.4); }
+  .toast.error { border-color: rgba(239,68,68,0.4); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">&#9876;</div>
+    <div class="logo-text">
+      <h1>AIRPG Control Center</h1>
+      <span>AI Immersive Role-Playing Agent System</span>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">離線</span>
+  </div>
+</header>
+
+<main class="main">
+  <!-- 左欄：設定 -->
+  <div class="left-col">
+    <!-- AI 模型設定 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-purple">&#129302;</div>
+        <span class="card-title">AI 對話模型 (LLM)</span>
+      </div>
+      <label for="llm-mode">供應商</label>
+      <select id="llm-mode" onchange="onLLMProviderChange()">
+        <option value="ollama">Ollama (在地，免費)</option>
+        <option value="openai">OpenAI (GPT-4o 等)</option>
+        <option value="anthropic">Anthropic (Claude 3.5 等)</option>
+        <option value="google">Google (Gemini 2.0 等)</option>
+      </select>
+
+      <label for="llm-model">模型名稱</label>
+      <select id="llm-model"></select>
+
+      <div id="llm-key-row" style="display:none;">
+        <label for="llm-key">API Key</label>
+        <input type="password" id="llm-key" placeholder="在此貼上您的 API Key...">
+      </div>
+
+      <div style="margin-top: 16px;">
+        <button class="btn btn-primary btn-full" onclick="saveConfig()">&#10003; 儲存設定</button>
+      </div>
+    </div>
+
+    <!-- Embedding 設定 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">&#128202;</div>
+        <span class="card-title">向量嵌入模型 (Embedding)</span>
+      </div>
+      <label for="embed-mode">供應商</label>
+      <select id="embed-mode" onchange="onEmbedProviderChange()">
+        <option value="ollama">Ollama (在地，nomic-embed-text)</option>
+        <option value="openai">OpenAI (text-embedding-3-small)</option>
+        <option value="google">Google (embedding-001)</option>
+      </select>
+
+      <label for="embed-model">模型名稱</label>
+      <select id="embed-model"></select>
+
+      <div class="warning-box" id="embed-warning" style="display:none;">
+        <span>&#9888;</span>
+        <span>切換 Embedding 供應商後，必須重新執行「更新知識庫」，舊的向量資料將被清除。若選擇非 Ollama 供應商，仍需安裝 Ollama 才能使用 Ingest 功能。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右欄：控制 -->
+  <div class="right-col">
+    <!-- 服務控制 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-green">&#9881;</div>
+        <span class="card-title">後端伺服器控制</span>
+      </div>
+      <div class="server-control">
+        <button class="btn btn-success" id="btn-start" onclick="startBackend()">&#9654; 啟動伺服器</button>
+        <button class="btn btn-danger" id="btn-stop" onclick="stopBackend()" disabled>&#9646;&#9646; 停止服務</button>
+      </div>
+      <div style="margin-top: 12px;">
+        <button class="btn btn-game btn-full" id="btn-game" onclick="openGame()" disabled>
+          &#127918; 進入遊戲
+        </button>
+      </div>
+    </div>
+
+    <!-- 知識庫管理 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-yellow">&#128218;</div>
+        <span class="card-title">世界觀知識庫管理 (RAG)</span>
+      </div>
+      <div class="file-list" id="file-list">
+        <div style="color: var(--text-muted); font-size: 12px;">載入中...</div>
+      </div>
+      <div class="progress-bar-wrap" id="ingest-progress">
+        <div class="progress-label">知識庫更新中，請稍候...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <button class="btn btn-blue btn-full" id="btn-ingest" onclick="runIngest()">
+        &#8635; 更新知識庫 (重新 Ingest)
+      </button>
+    </div>
+
+    <!-- 即時日誌 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">&#128196;</div>
+        <span class="card-title">即時日誌</span>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="clearLogs()">清除</button>
+      </div>
+      <div class="console" id="console-output">
+        <span style="color: var(--text-muted);">等待服務啟動...</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '';
+  let logLines = [];
+  let polling;
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast show ${type}`;
+    setTimeout(() => { t.className = 'toast'; }, 3000);
+  }
+
+  async function apiFetch(path, method = 'GET', body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    return res.json();
+  }
+
+  // --- 載入設定 ---
+  async function loadConfig() {
+    const cfg = await apiFetch('/api/config');
+    // 設定初始預設值 (如果 .env 是空的)
+    const mode = cfg.LLM_MODE || 'ollama';
+    const model = cfg.LLM_MODEL_NAME || 'llama3';
+    const emode = cfg.EMBED_MODE || 'ollama';
+    const emodel = cfg.EMBED_MODEL_NAME || 'nomic-embed-text';
+
+    document.getElementById('llm-mode').value = mode;
+    onLLMProviderChange(); // 先觸發切換載入選單選項
+    document.getElementById('llm-model').value = model;
+
+    document.getElementById('llm-key').value = cfg.OPENAI_API_KEY || cfg.ANTHROPIC_API_KEY || cfg.GOOGLE_API_KEY || '';
+    
+    document.getElementById('embed-mode').value = emode;
+    onEmbedProviderChange(); // 先觸發切換載入選單選項
+    document.getElementById('embed-model').value = emodel;
+  }
+
+  // --- 儲存設定 ---
+  async function saveConfig() {
+    const llmMode = document.getElementById('llm-mode').value;
+    const key = document.getElementById('llm-key').value;
+    const body = {
+      LLM_MODE: llmMode,
+      LLM_MODEL_NAME: document.getElementById('llm-model').value,
+      OPENAI_API_KEY: llmMode === 'openai' ? key : '',
+      ANTHROPIC_API_KEY: llmMode === 'anthropic' ? key : '',
+      GOOGLE_API_KEY: llmMode === 'google' ? key : '',
+      EMBED_MODE: document.getElementById('embed-mode').value,
+      EMBED_MODEL_NAME: document.getElementById('embed-model').value,
+    };
+    const res = await apiFetch('/api/config', 'POST', body);
+    showToast(res.success ? '設定已儲存！重啟伺服器後生效。' : res.message, res.success ? 'success' : 'error');
+  }
+
+  function onLLMProviderChange() {
+    const mode = document.getElementById('llm-mode').value;
+    const modelSelect = document.getElementById('llm-model');
+    const keyRow = document.getElementById('llm-key-row');
+    keyRow.style.display = mode === 'ollama' ? 'none' : 'block';
+    
+    // 清空並重新填充模型選單
+    const oldVal = modelSelect.value;
+    modelSelect.innerHTML = '';
+    const options = {
+      ollama: ['llama3', 'mistral', 'gemma'],
+      openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+      anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'],
+      google: ['gemini-2.0-flash', 'gemini-1.5-pro']
+    };
+    
+    const providerOptions = options[mode] || [];
+    providerOptions.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      modelSelect.appendChild(opt);
+    });
+    // 如果舊的值在新的選項中，則保留
+    if (providerOptions.includes(oldVal)) {
+      modelSelect.value = oldVal;
+    }
+  }
+
+  function onEmbedProviderChange() {
+    const mode = document.getElementById('embed-mode').value;
+    const modelSelect = document.getElementById('embed-model');
+    const warning = document.getElementById('embed-warning');
+    warning.style.display = mode !== 'ollama' ? 'block' : 'none';
+    
+    const oldVal = modelSelect.value;
+    modelSelect.innerHTML = '';
+    const options = {
+      ollama: ['nomic-embed-text'],
+      openai: ['text-embedding-3-small', 'text-embedding-3-large'],
+      google: ['models/embedding-001']
+    };
+    
+    const providerOptions = options[mode] || [];
+    providerOptions.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      modelSelect.appendChild(opt);
+    });
+    if (providerOptions.includes(oldVal)) {
+      modelSelect.value = oldVal;
+    }
+  }
+
+  // --- 服務控制 ---
+  async function startBackend() {
+    const res = await apiFetch('/api/start', 'POST');
+    showToast(res.message, res.success ? 'success' : 'error');
+  }
+
+  async function stopBackend() {
+    const res = await apiFetch('/api/stop', 'POST');
+    showToast(res.message, res.success ? 'success' : 'error');
+  }
+
+  function openGame() {
+    window.open('http://localhost:8000', '_blank');
+  }
+
+  // --- 知識庫 ---
+  async function runIngest() {
+    const btn = document.getElementById('btn-ingest');
+    const prog = document.getElementById('ingest-progress');
+    const fill = document.getElementById('progress-fill');
+    btn.disabled = true;
+    prog.classList.add('show');
+    fill.style.width = '20%';
+    const res = await apiFetch('/api/ingest', 'POST');
+    showToast(res.message, res.success ? 'success' : 'error');
+    fill.style.width = '80%';
+    setTimeout(() => {
+      fill.style.width = '100%';
+      setTimeout(() => { prog.classList.remove('show'); fill.style.width = '0'; btn.disabled = false; }, 800);
+    }, 1500);
+  }
+
+  function renderFiles(files) {
+    const el = document.getElementById('file-list');
+    if (!files || files.length === 0) {
+      el.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">data/ 目錄目前沒有文件。</div>';
+      return;
+    }
+    el.innerHTML = files.map(f =>
+      `<div class="file-item"><span class="file-icon">&#128196;</span>${f}</div>`
+    ).join('');
+  }
+
+  function appendLogs(newLines) {
+    const el = document.getElementById('console-output');
+    if (newLines.length === 0) return;
+    const wasAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 20;
+    el.innerHTML = '';
+    for (const line of newLines) {
+      const span = document.createElement('div');
+      span.textContent = line || ' ';
+      if (line.toLowerCase().includes('error')) span.className = 'console-line-err';
+      else if (line.toLowerCase().includes('warn')) span.className = 'console-line-warn';
+      else if (line.startsWith('[')) span.className = 'console-line-info';
+      el.appendChild(span);
+    }
+    if (wasAtBottom) el.scrollTop = el.scrollHeight;
+  }
+
+  function clearLogs() {
+    document.getElementById('console-output').innerHTML = '';
+    logLines = [];
+  }
+
+  function updateStatus(running) {
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    const btnStart = document.getElementById('btn-start');
+    const btnStop = document.getElementById('btn-stop');
+    const btnGame = document.getElementById('btn-game');
+    if (running) {
+      dot.classList.add('online');
+      txt.textContent = '伺服器運行中';
+      btnStart.disabled = true;
+      btnStop.disabled = false;
+      btnGame.disabled = false;
+    } else {
+      dot.classList.remove('online');
+      txt.textContent = '離線';
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      btnGame.disabled = true;
+    }
+  }
+
+  // --- 輪詢狀態與日誌 ---
+  async function poll() {
+    try {
+      const [status, logsData] = await Promise.all([
+        apiFetch('/api/status'),
+        apiFetch('/api/logs')
+      ]);
+      updateStatus(status.running);
+      renderFiles(status.files);
+      logLines = logsData.logs || [];
+      appendLogs(logLines);
+    } catch (e) { /* 忽略連線錯誤 */ }
+  }
+
+  // --- 初始化 ---
+  (async () => {
+    await loadConfig();
+    poll();
+    polling = setInterval(poll, 2000);
+  })();
+</script>
+</body>
+</html>

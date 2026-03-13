@@ -1,14 +1,34 @@
-# Python
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .env
+*.log
+build/
+dist/
+*.egg-info/
 
-# Godot
+# --- Godot ---
 .godot/
 *.import
 export_presets.cfg
+# 排除匯出資料夾，保持 Repo 只有原始碼
+client/export/
+godot.log
 
-# VS Code
+# --- RAG & Data ---
+# 向量資料庫
+server/chroma_db/
+server/data/tmp/
+
+# --- VS Code & IDE ---
 .vscode/
+.idea/
+*.swp
+.agent/
+
+# --- OS System ---
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -190,60 +190,40 @@ main.py
 
 ---
 
-## 5. 啟動與測試
+## 5. 啟動與測試 (Launcher 控制台)
 
-### 5.1 前置條件
+我們推薦使用整合式的 **Launcher Dashboard** 來管理後端服務。
 
-確認 Ollama 已啟動，且以下模型已下載：
-```bash
-ollama pull nomic-embed-text  # Embedding 模型
-ollama pull llama3             # 對話模型
-```
+### 5.1 快速啟動
+1.  **啟動控制台**: 雙擊根目錄 `start_dev.bat`。
+2.  **存取介面**: 瀏覽器會自動開啟 `http://localhost:8080`。
+3.  **配置 AI**: 在介面中選擇您的 LLM 與 Embedding 供應商。
+4.  **啟動服務**: 點擊「啟動伺服器」，即時日誌將顯示在下方。
 
-### 5.2 啟動後端
+### 5.2 多供應商動態切換
+本系統支援以下供應商的無縫切換，無需修改程式碼：
+*   **Ollama**: 完全在地運行（預設推薦）。
+*   **OpenAI / Anthropic / Google**: 透過 Launcher 填入 API Key 即可啟動。
 
-```bash
-# 在 server/ 目錄下執行
-.\\venv\\Scripts\\activate
-python app/rag/ingest.py    # 首次執行需建置知識庫
-uvicorn main:app --reload
-```
-
-### 5.3 測試端點
-
-**測試 Health Check**：
-```bash
-# PowerShell
-(Invoke-WebRequest -Uri "http://127.0.0.1:8000/health" -UseBasicParsing).Content
-```
-
-**測試 Chat 端點 (Python)**：
-```python
-import urllib.request, json
-
-payload = {
-    "user_id": "test_user",
-    "message": "你好，請介紹一下這座森林。",
-    "character_id": "elf"
-}
-
-req = urllib.request.Request(
-    "http://127.0.0.1:8000/api/v1/chat/",
-    data=json.dumps(payload).encode(),
-    headers={"Content-Type": "application/json"},
-    method="POST"
-)
-
-with urllib.request.urlopen(req) as r:
-    print(json.loads(r.read()))
-```
-
-**使用 API 文件 (推薦)**：
-開瀏覽器訪問 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)，FastAPI 會自動產生互動式 Swagger UI。
-
+### 5.3 知識庫管理
+在 Launcher 介面中：
+*   **文件列表**: 自動列出 `server/data/` 中的檔案。
+*   **一鍵 Ingest**: 點擊「更新知識庫」按鈕，系統會自動根據當前的 Embedding 設定重新計算向量並重建 ChromaDB。
 ---
 
-## 6. 常見問題
+## 6. 環境變數與安全管理
+
+本專案使用 `python-dotenv` 管理敏感資訊。
+
+### 6.1 使用 Launcher 管理 (推薦)
+啟動 Launcher Dashboard 後，直接在介面填寫設定並點擊「儲存設定」，系統會自動更新 `server/.env`。
+
+### 6.2 手動開發模式
+1. 找出 `server/.env.example`。
+2. 複製一份並重新命名為 `.env`。
+3. 根據需求修改 `LLM_MODE` 與 API Key。
+
+## 7. 常見問題
 
 | 問題 | 可能原因 | 解決方法 |
 |:---|:---|:---|

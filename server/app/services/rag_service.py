@@ -5,12 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from app.core.config import (
-    CHROMA_PATH,
-    EMBEDDING_MODEL,
-    CHAT_MODEL,
-    RETRIEVER_K,
-)
+from app.core import config
+from app.core.config import CHROMA_PATH, RETRIEVER_K
 
 # --- 系統提示詞 ---
 SYSTEM_PROMPT = """你是一個沉浸式 AI 角色扮演助理。請嚴格依照以下提供的「世界觀背景資料」來回答問題。
@@ -35,13 +31,44 @@ def _format_docs(docs: list) -> str:
     return "\n\n---\n\n".join(doc.page_content for doc in docs)
 
 
+def _get_embeddings():
+    """依 EMBED_MODE 動態選擇 Embedding 模型。"""
+    mode = config.EMBED_MODE
+    model = config.EMBED_MODEL_NAME
+    if mode == "openai":
+        from langchain_openai import OpenAIEmbeddings
+        return OpenAIEmbeddings(api_key=config.OPENAI_API_KEY, model=model)
+    elif mode == "google":
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        return GoogleGenerativeAIEmbeddings(google_api_key=config.GOOGLE_API_KEY, model=model)
+    else:  # 預設 ollama
+        return OllamaEmbeddings(model=model)
+
+
+def _get_llm():
+    """依 LLM_MODE 動態選擇語言模型。"""
+    mode = config.LLM_MODE
+    model = config.LLM_MODEL_NAME
+    if mode == "openai":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(api_key=config.OPENAI_API_KEY, model=model, temperature=0.7)
+    elif mode == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(api_key=config.ANTHROPIC_API_KEY, model=model, temperature=0.7)
+    elif mode == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(google_api_key=config.GOOGLE_API_KEY, model=model, temperature=0.7)
+    else:  # 預設 ollama
+        return ChatOllama(model=model, temperature=0.7)
+
+
 def get_rag_chain():
     """
     初始化並回傳 RAG Chain。
-    使用 Chroma 作為向量庫，Ollama 作為 Embedding 與 LLM 推論後端。
+    依 config 中的 LLM_MODE 與 EMBED_MODE 動態選擇模型供應商。
     """
     # 1. 初始化 Embedding 模型，連接現有的 ChromaDB
-    embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL)
+    embeddings = _get_embeddings()
     vectorstore = Chroma(
         persist_directory=CHROMA_PATH,
         embedding_function=embeddings,
@@ -55,7 +82,7 @@ def get_rag_chain():
     ])
 
     # 3. 初始化 LLM
-    llm = ChatOllama(model=CHAT_MODEL, temperature=0.7)
+    llm = _get_llm()
 
     # 4. 使用 LCEL 將各元件串接成 RAG Chain
     rag_chain = (
