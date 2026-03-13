@@ -1,41 +1,47 @@
 @echo off
 setlocal
-cd /d %~dp0
+cd /d "%~dp0"
 
-echo ==========================================
-echo    AIRPG Control Center
-echo ==========================================
+REM ------------------------------------------
+REM    AIRPG Control Center Startup
+REM ------------------------------------------
 
-:: --- 檢查 Python ---
+REM 1. Check Python
 where python >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [錯誤] 找不到 Python，請先安裝 Python 3.10+。
-    pause & exit /b 1
+if errorlevel 1 (
+    echo [ERROR] Python not found. Please install Python 3.10+.
+    pause
+    exit /b 1
 )
 
-:: --- 確保 venv 存在 (供 Launcher 使用) ---
+REM 2. Ensure venv exists
 if not exist "server\venv\Scripts\python.exe" (
-    echo [系統] 初次執行，正在建立虛擬環境...
+    echo [SYSTEM] First run detected. Creating virtual environment
     python -m venv server\venv
-    call server\venv\Scripts\activate.bat
-    python -m pip install -q -r server\requirements.txt
+    if errorlevel 1 (
+        echo [ERROR] Failed to create venv.
+        pause
+        exit /b 1
+    )
+    echo [SYSTEM] Installing dependencies
+    "server\venv\Scripts\python.exe" -m pip install -r server\requirements.txt
 )
 
-:: --- 啟動 Launcher 控制台 ---
-echo [系統] 正在啟動 AIRPG Control Center...
-start "AIRPG-Launcher" /min cmd /c "server\venv\Scripts\python.exe launcher\launcher_server.py"
+REM 3. Kill existing launcher if any
+taskkill /F /FI "WINDOWTITLE eq AIRPG-Launcher*" /T >nul 2>&1
 
-:: --- 等待 Launcher 就緒 ---
-echo [系統] 等待控制台準備就緒...
-timeout /t 2 /nobreak >nul
+REM 4. Start Launcher
+echo [SYSTEM] Starting AIRPG Control Center
+start "AIRPG-Launcher" "server\venv\Scripts\python.exe" launcher\launcher_server.py
 
-:: --- 開啟瀏覽器 ---
-echo [系統] 正在開啟控制台介面...
-start "" http://localhost:8080
+REM 5. Wait for readiness
+echo [SYSTEM] Waiting for console to be ready 8s
+timeout /t 8 /nobreak >nul
 
+REM 6. Open Browser
+echo [SYSTEM] Opening dashboard
+start "" "http://localhost:8080"
+
+echo [OK] AIRPG Control Center is running at http://localhost:8080.
 echo.
-echo ==========================================
-echo [完成] AIRPG Control Center 已開啟。
-echo          http://localhost:8080
-echo [提示] 請在介面中設定 AI 模型後啟動後端。
-echo ==========================================
+pause

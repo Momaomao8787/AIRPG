@@ -84,17 +84,57 @@ def start_backend():
     if not bat_file.exists():
         return {"success": False, "message": f"找不到 {bat_file}"}
 
-    with log_lock:
-        backend_logs.clear()
+def log_reader(proc, prefix=""):
+    """讀取子進程輸出並存入全域緩存，加入 Throttling 邏輯處理進度條。"""
+    global backend_logs
+    try:
+        while True:
+            line_bytes = proc.stdout.readline()
+            if not line_bytes:
+                break
+            
+            # 嘗試解碼
+            try:
+                line = line_bytes.decode('utf-8', errors='replace').strip()
+            except:
+                continue
 
-    def log_reader(proc):
-        for line in iter(proc.stdout.readline, b""):
-            decoded = line.decode("utf-8", errors="replace").rstrip()
+            if not line:
+                continue
+
+            full_line = f"{prefix}{line}"
             with log_lock:
-                backend_logs.append(decoded)
+                # Throttling: 如果新行包含百分比 (%)
+                is_progress = "%" in line
+                if is_progress and len(backend_logs) > 0:
+                    last_line = backend_logs[-1]
+                    # 如果前綴相似 (例如 "pulling abc: 10%" vs "pulling abc: 11%")，則蓋過舊行
+                    # 這裡簡單判斷：如果最後一行也是進度行，且開頭 15 字元相同
+                    if "%" in last_line and full_line[:15] == last_line[:15]:
+                        backend_logs[-1] = full_line
+                    else:
+                        backend_logs.append(full_line)
+                else:
+                    backend_logs.append(full_line)
+                
                 if len(backend_logs) > MAX_LOG_LINES:
                     backend_logs.pop(0)
+    finally:
         proc.stdout.close()
+
+
+def start_backend():
+    """啟動後端伺服器。"""
+    global backend_process, backend_logs
+    if backend_process and backend_process.poll() is None:
+        return {"success": False, "message": "後端已在運行中。"}
+
+    bat_file = SERVER_DIR / "run_server.bat"
+    if not bat_file.exists():
+        return {"success": False, "message": f"找不到 {bat_file}"}
+
+    with log_lock:
+        backend_logs.clear()
 
     backend_process = subprocess.Popen(
         ["cmd.exe", "/c", str(bat_file)],
@@ -102,9 +142,10 @@ def start_backend():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         creationflags=subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0,
+        text=False
     )
     threading.Thread(target=log_reader, args=(backend_process,), daemon=True).start()
-    return {"success": True, "message": "後端服務啟動中..."}
+    return {"success": True, "message": "Backend service starting..."}
 
 
 def stop_backend():
@@ -120,7 +161,7 @@ def stop_backend():
         os.kill(backend_process.pid, signal.SIGTERM)
 
     backend_process = None
-    return {"success": True, "message": "後端服務已停止。"}
+    return {"success": True, "message": "Backend service stopped."}
 
 
 def run_ingest():
@@ -139,18 +180,13 @@ def run_ingest():
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        for line in iter(proc.stdout.readline, b""):
-            decoded = line.decode("utf-8", errors="replace").rstrip()
-            with log_lock:
-                backend_logs.append(f"[ingest] {decoded}")
-                if len(backend_logs) > MAX_LOG_LINES:
-                    backend_logs.pop(0)
-        proc.stdout.close()
+        # Use the global log_reader with a prefix for ingest logs
+        log_reader(proc, prefix="[ingest] ")
         with log_lock:
             backend_logs.append("[ingest] 知識庫更新完畢！")
 
     threading.Thread(target=_run, daemon=True).start()
-    return {"success": True, "message": "知識庫更新中，請查看日誌。"}
+    return {"success": True, "message": "Knowledge base updating... check logs."}
 
 
 def list_data_files() -> list:
@@ -227,7 +263,11 @@ class LauncherHandler(BaseHTTPRequestHandler):
             current = read_env()
             current.update(data)
             write_env(current)
-            self.send_json({"success": True, "message": "設定已儲存。"})
+            self.send_json({"success": True, "message": "Settings saved."})
+        elif path == "/api/clear_logs":
+            with log_lock:
+                backend_logs.clear()
+            self.send_json({"success": True, "message": "Logs cleared."})
         elif path == "/api/start":
             self.send_json(start_backend())
         elif path == "/api/stop":

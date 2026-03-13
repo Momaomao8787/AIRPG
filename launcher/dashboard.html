@@ -278,7 +278,7 @@
   </div>
   <div class="header-status">
     <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">離線</span>
+    <span id="status-text">Offline</span>
   </div>
 </header>
 
@@ -289,17 +289,17 @@
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-purple">&#129302;</div>
-        <span class="card-title">AI 對話模型 (LLM)</span>
+        <span class="card-title">AI Chat Model (LLM)</span>
       </div>
-      <label for="llm-mode">供應商</label>
+      <label for="llm-mode">Provider</label>
       <select id="llm-mode" onchange="onLLMProviderChange()">
-        <option value="ollama">Ollama (在地，免費)</option>
-        <option value="openai">OpenAI (GPT-4o 等)</option>
-        <option value="anthropic">Anthropic (Claude 3.5 等)</option>
-        <option value="google">Google (Gemini 2.0 等)</option>
+        <option value="ollama">Ollama (Local, Free)</option>
+        <option value="openai">OpenAI (Cloud, Paid)</option>
+        <option value="anthropic">Anthropic (Cloud, Paid)</option>
+        <option value="google">Google (Cloud, Paid)</option>
       </select>
 
-      <label for="llm-model">模型名稱</label>
+      <label for="llm-model">Model Name</label>
       <select id="llm-model"></select>
 
       <div id="llm-key-row" style="display:none;">
@@ -308,7 +308,7 @@
       </div>
 
       <div style="margin-top: 16px;">
-        <button class="btn btn-primary btn-full" onclick="saveConfig()">&#10003; 儲存設定</button>
+        <button class="btn btn-primary btn-full" onclick="saveConfig()">&#10003; Save Settings</button>
       </div>
     </div>
 
@@ -316,21 +316,21 @@
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-blue">&#128202;</div>
-        <span class="card-title">向量嵌入模型 (Embedding)</span>
+        <span class="card-title">Vector Embedding Model</span>
       </div>
-      <label for="embed-mode">供應商</label>
+      <label for="embed-mode">Provider</label>
       <select id="embed-mode" onchange="onEmbedProviderChange()">
-        <option value="ollama">Ollama (在地，nomic-embed-text)</option>
-        <option value="openai">OpenAI (text-embedding-3-small)</option>
-        <option value="google">Google (embedding-001)</option>
+        <option value="ollama">Ollama (Local)</option>
+        <option value="openai">OpenAI (Cloud)</option>
+        <option value="google">Google (Cloud)</option>
       </select>
 
-      <label for="embed-model">模型名稱</label>
+      <label for="embed-model">Model Name</label>
       <select id="embed-model"></select>
 
       <div class="warning-box" id="embed-warning" style="display:none;">
         <span>&#9888;</span>
-        <span>切換 Embedding 供應商後，必須重新執行「更新知識庫」，舊的向量資料將被清除。若選擇非 Ollama 供應商，仍需安裝 Ollama 才能使用 Ingest 功能。</span>
+        <span>Warning: Changing Embedding provider requires re-indexing knowledge base. Old data will be cleared. Ollama is required even for cloud providers to run ingest.</span>
       </div>
     </div>
   </div>
@@ -341,15 +341,15 @@
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-green">&#9881;</div>
-        <span class="card-title">後端伺服器控制</span>
+        <span class="card-title">Server Controls</span>
       </div>
       <div class="server-control">
-        <button class="btn btn-success" id="btn-start" onclick="startBackend()">&#9654; 啟動伺服器</button>
-        <button class="btn btn-danger" id="btn-stop" onclick="stopBackend()" disabled>&#9646;&#9646; 停止服務</button>
+        <button class="btn btn-success" id="btn-start" onclick="startBackend()">&#9654; Start Server</button>
+        <button class="btn btn-danger" id="btn-stop" onclick="stopBackend()" disabled>&#9646;&#9646; Stop Service</button>
       </div>
       <div style="margin-top: 12px;">
         <button class="btn btn-game btn-full" id="btn-game" onclick="openGame()" disabled>
-          &#127918; 進入遊戲
+          &#127918; Launch Game
         </button>
       </div>
     </div>
@@ -358,17 +358,17 @@
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-yellow">&#128218;</div>
-        <span class="card-title">世界觀知識庫管理 (RAG)</span>
+        <span class="card-title">Knowledge Base Management (RAG)</span>
       </div>
       <div class="file-list" id="file-list">
-        <div style="color: var(--text-muted); font-size: 12px;">載入中...</div>
+        <div style="color: var(--text-muted); font-size: 12px;">Loading...</div>
       </div>
       <div class="progress-bar-wrap" id="ingest-progress">
-        <div class="progress-label">知識庫更新中，請稍候...</div>
+        <div class="progress-label">Updating knowledge base...</div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
       <button class="btn btn-blue btn-full" id="btn-ingest" onclick="runIngest()">
-        &#8635; 更新知識庫 (重新 Ingest)
+        &#8635; Update Knowledge Base (Ingest)
       </button>
     </div>
 
@@ -376,11 +376,11 @@
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-blue">&#128196;</div>
-        <span class="card-title">即時日誌</span>
-        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="clearLogs()">清除</button>
+        <span class="card-title">Logs</span>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="clearLogs()">Clear</button>
       </div>
       <div class="console" id="console-output">
-        <span style="color: var(--text-muted);">等待服務啟動...</span>
+        <span style="color: var(--text-muted);">Waiting for service...</span>
       </div>
     </div>
   </div>
@@ -441,7 +441,7 @@
       EMBED_MODEL_NAME: document.getElementById('embed-model').value,
     };
     const res = await apiFetch('/api/config', 'POST', body);
-    showToast(res.success ? '設定已儲存！重啟伺服器後生效。' : res.message, res.success ? 'success' : 'error');
+    showToast(res.success ? 'Settings cached! Restart server to apply.' : res.message, res.success ? 'success' : 'error');
   }
 
   function onLLMProviderChange() {
@@ -534,7 +534,7 @@
   function renderFiles(files) {
     const el = document.getElementById('file-list');
     if (!files || files.length === 0) {
-      el.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">data/ 目錄目前沒有文件。</div>';
+      el.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">Data directory is empty.</div>';
       return;
     }
     el.innerHTML = files.map(f =>
@@ -558,9 +558,12 @@
     if (wasAtBottom) el.scrollTop = el.scrollHeight;
   }
 
-  function clearLogs() {
-    document.getElementById('console-output').innerHTML = '';
-    logLines = [];
+  async function clearLogs() {
+    const res = await apiFetch('/api/clear_logs', 'POST');
+    if (res.success) {
+      document.getElementById('console-output').innerHTML = '';
+      logLines = [];
+    }
   }
 
   function updateStatus(running) {
@@ -571,13 +574,13 @@
     const btnGame = document.getElementById('btn-game');
     if (running) {
       dot.classList.add('online');
-      txt.textContent = '伺服器運行中';
+      txt.textContent = 'Server Online';
       btnStart.disabled = true;
       btnStop.disabled = false;
       btnGame.disabled = false;
     } else {
       dot.classList.remove('online');
-      txt.textContent = '離線';
+      txt.textContent = 'Offline';
       btnStart.disabled = false;
       btnStop.disabled = true;
       btnGame.disabled = true;
