@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -283,9 +283,9 @@
 </header>
 
 <main class="main">
-  <!-- 左欄：設定 -->
+  <!-- Left Column: Settings -->
   <div class="left-col">
-    <!-- AI 模型設定 -->
+    <!-- AI Model Settings -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-purple">&#129302;</div>
@@ -304,7 +304,7 @@
 
       <div id="llm-key-row" style="display:none;">
         <label for="llm-key">API Key</label>
-        <input type="password" id="llm-key" placeholder="在此貼上您的 API Key...">
+        <input type="password" id="llm-key" placeholder="Paste your API Key here...">
       </div>
 
       <div style="margin-top: 16px;">
@@ -312,7 +312,7 @@
       </div>
     </div>
 
-    <!-- Embedding 設定 -->
+    <!-- Embedding Settings -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-blue">&#128202;</div>
@@ -335,9 +335,9 @@
     </div>
   </div>
 
-  <!-- 右欄：控制 -->
+  <!-- Right Column: Control -->
   <div class="right-col">
-    <!-- 服務控制 -->
+    <!-- Service Control -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-green">&#9881;</div>
@@ -351,10 +351,11 @@
         <button class="btn btn-game btn-full" id="btn-game" onclick="openGame()" disabled>
           &#127918; Launch Game
         </button>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">遊戲請用 Godot 開啟 <code>client/</code> 專案並按 F5 執行。此按鈕可開啟後端 API 文件。</p>
       </div>
     </div>
 
-    <!-- 知識庫管理 -->
+    <!-- Knowledge Base Management -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-yellow">&#128218;</div>
@@ -372,7 +373,7 @@
       </button>
     </div>
 
-    <!-- 即時日誌 -->
+    <!-- Live Logs -->
     <div class="card">
       <div class="card-header">
         <div class="card-icon icon-blue">&#128196;</div>
@@ -511,7 +512,7 @@
   }
 
   function openGame() {
-    window.open('http://localhost:8000', '_blank');
+    window.open('http://localhost:8000/docs', '_blank');
   }
 
   // --- 知識庫 ---

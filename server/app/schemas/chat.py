@@ -2,10 +2,10 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class ChatRequest(BaseModel):
-    """使用者發送給 API 的請求格式"""
-    user_id: str = Field(..., description="使用者的唯一識別碼")
+    """使用者發送給 API 的請求格式。目前僅 message 會用於 RAG/LLM；user_id、character_id 保留供日後多角色／多使用者使用。"""
+    user_id: str = Field(..., description="使用者的唯一識別碼（保留供日後使用）")
     message: str = Field(..., description="使用者輸入的訊息")
-    character_id: str = Field(default="default", description="角色識別碼")
+    character_id: str = Field(default="default", description="角色識別碼（保留供日後使用）")
 
 class RagContext(BaseModel):
     """RAG 從知識庫中取回的參考片段"""

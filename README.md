@@ -82,6 +82,8 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
+若要連到不同後端位址（例如 Docker 或遠端主機），可在 Godot 的 **Project → Project Settings → Application → Config** 中設定 `server_url`，或直接編輯 `client/project.godot` 的 `config/server_url`。
+
 ---
 
 ## API 規格
