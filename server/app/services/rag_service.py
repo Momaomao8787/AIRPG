@@ -1,4 +1,6 @@
+import codecs
 import json
+import re
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
@@ -8,18 +10,17 @@ from langchain_core.runnables import RunnablePassthrough
 from app.core import config
 from app.core.config import CHROMA_PATH, RETRIEVER_K
 
-# --- 系統提示詞 ---
-SYSTEM_PROMPT = """你是一個沉浸式 AI 角色扮演助理。請嚴格依照以下提供的「世界觀背景資料」來回答問題。
-請以第一人稱扮演角色，保持角色的說話語氣，切勿說出「我是 AI」或「我不知道」等出戲的話語。
+# --- System Prompt ---
+SYSTEM_PROMPT = """You are an immersive AI Role-playing Assistant. Please answer questions strictly based on the provided "World Background Data".
+Please play the role in the first person, maintain the character's tone, and never say things like "I am an AI" or "I don't know".
 
-請務必以以下 JSON 格式回應，不要加入任何其他文字：
+You MUST respond strictly in the following JSON format without any other text:
 {{
-  "response": "角色的對話台詞",
-  "emotion": "當前情緒 (neutral/happy/sad/angry/mysterious/surprised 之一)",
-  "animation_trigger": "動畫指令 (idle/talk/nod/shake_head 之一，或 null)"
+  "response": "Character dialogue line",
+  "emotion": "Current emotion (neutral/happy/sad/angry/mysterious/surprised)"
 }}
 
-【世界觀背景資料】
+[World Background Data]
 {context}
 """
 
@@ -62,18 +63,28 @@ def _get_llm():
         return ChatOllama(model=model, temperature=0.7)
 
 
+from typing import Any, cast
+
+_rag_chain: Any = None
+_retriever: Any = None
+
+
 def get_rag_chain():
     """
-    初始化並回傳 RAG Chain。
+    初始化並回傳 RAG Chain (Singleton)。
     依 config 中的 LLM_MODE 與 EMBED_MODE 動態選擇模型供應商。
     """
+    global _rag_chain, _retriever
+    if _rag_chain is not None and _retriever is not None:
+        return _rag_chain, _retriever
+
     # 1. 初始化 Embedding 模型，連接現有的 ChromaDB
     embeddings = _get_embeddings()
     vectorstore = Chroma(
         persist_directory=CHROMA_PATH,
         embedding_function=embeddings,
     )
-    retriever = vectorstore.as_retriever(search_kwargs={"k": RETRIEVER_K})
+    _retriever = vectorstore.as_retriever(search_kwargs={"k": RETRIEVER_K})
 
     # 2. 定義 Prompt 模板
     prompt = ChatPromptTemplate.from_messages([
@@ -85,9 +96,9 @@ def get_rag_chain():
     llm = _get_llm()
 
     # 4. 使用 LCEL 將各元件串接成 RAG Chain
-    rag_chain = (
+    _rag_chain = (
         {
-            "context": retriever | _format_docs,
+            "context": _retriever | _format_docs,
             "question": RunnablePassthrough(),
         }
         | prompt
@@ -95,7 +106,7 @@ def get_rag_chain():
         | StrOutputParser()
     )
 
-    return rag_chain, retriever
+    return _rag_chain, _retriever
 
 
 def query(message: str) -> dict:
@@ -115,24 +126,36 @@ def query(message: str) -> dict:
     rag_context_texts = [doc.page_content for doc in retrieved_docs]
 
     # 執行 RAG Chain 取得 LLM 的回應
-    raw_output = rag_chain.invoke(message)
+    raw_output = cast(Any, rag_chain).invoke(message)
 
     # 嘗試解析 LLM 回傳的 JSON
+    cleaned = raw_output.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    parsed = None
     try:
-        # 有時 LLM 會在 JSON 外包裹 markdown code block，先清理
-        cleaned = raw_output.strip().removeprefix("```json").removesuffix("```").strip()
-        parsed = json.loads(cleaned)
-    except (json.JSONDecodeError, AttributeError):
-        # 若解析失敗，直接將原始文字作為回應
-        parsed = {
-            "response": raw_output,
-            "emotion": "neutral",
-            "animation_trigger": None,
-        }
+        # 若 LLM 在數字或 null 後多加了尾隨逗號，先移除再解析
+        cleaned_fixed = re.sub(r",\s*([}\]])", r"\1", cleaned)
+        parsed = json.loads(cleaned_fixed)
+    except (json.JSONDecodeError, AttributeError, TypeError):
+        pass
+    if parsed is None:
+        # 解析失敗時嘗試用正則抽出 "response": "..."，避免把整段 JSON 當成對話顯示
+        match = re.search(r'"response"\s*:\s*"((?:[^"\\]|\\.)*)"', cleaned, re.DOTALL)
+        if match:
+            response_text = codecs.decode(match.group(1), "unicode_escape")
+            parsed = {"response": response_text, "emotion": "neutral"}
+        else:
+            parsed = {"response": raw_output, "emotion": "neutral"}
+
+    resp = parsed.get("response", raw_output)
+    if resp is None or not isinstance(resp, str):
+        resp = "（角色暫時無法回覆，請再試一次。）"
+    emo = parsed.get("emotion", "neutral")
+    if emo is None or not isinstance(emo, str):
+        emo = "neutral"
 
     return {
-        "response": parsed.get("response", raw_output),
-        "emotion": parsed.get("emotion", "neutral"),
-        "animation_trigger": parsed.get("animation_trigger"),
-        "rag_context": rag_context_texts,
+        "response": resp,
+        "emotion": emo,
+        "animation_trigger": None,
+        "rag_context": [],
     }
