@@ -1,0 +1,38 @@
+# AIRPG: Backend API + Launcher Dashboard
+# Usage: copy server/.env.example to server/.env, then: docker compose up -d
+
+services:
+  backend:
+    build: .
+    container_name: airpg-backend
+    working_dir: /app/server
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server/data:/app/server/data
+      - airpg_chroma:/app/server/chroma_db
+      - ./dist:/app/static/game
+    env_file:
+      - ./server/.env
+    restart: unless-stopped
+
+  launcher:
+    build: .
+    container_name: airpg-launcher
+    working_dir: /app
+    command: ["python", "launcher/launcher_server.py"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server/data:/app/server/data
+      - airpg_chroma:/app/server/chroma_db
+      - ./server/.env:/app/server/.env
+    env_file:
+      - ./server/.env
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  airpg_chroma:

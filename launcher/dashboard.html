@@ -351,7 +351,7 @@
         <button class="btn btn-game btn-full" id="btn-game" onclick="openGame()" disabled>
           &#127918; Launch Game
         </button>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">遊戲請用 Godot 開啟 <code>client/</code> 專案並按 F5 執行。此按鈕可開啟後端 API 文件。</p>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">若已將 Godot 匯出到 <code>dist/</code>，此按鈕會開啟瀏覽器遊戲 (<code>/game/</code>)；否則可開 <a href="http://localhost:8000/docs" target="_blank">API 文件</a>。本機開發也可用 Godot 開 <code>client/</code> 按 F5。</p>
       </div>
     </div>
 
@@ -512,7 +512,7 @@
   }
 
   function openGame() {
-    window.open('http://localhost:8000/docs', '_blank');
+    window.open('http://localhost:8000/game/', '_blank');
   }
 
   // --- 知識庫 ---

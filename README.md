@@ -65,7 +65,7 @@ graph LR
 1. 開啟根目錄的 `start_dev.bat`
 2. 瀏覽器自動開啟 `localhost:8080`（Launcher Dashboard）
 3. 在 Dashboard 設定 AI 供應商與模型
-4. 點擊「啟動伺服器」，待日誌顯示成功後點擊「進入遊戲」(遊戲無匯出，則進入遊戲功能無效)
+4. 點擊「啟動伺服器」，待日誌顯示成功後點擊「進入遊戲」（會開啟 `http://localhost:8000/game/`；若已將 Godot 匯出到 `dist/` 則為瀏覽器版遊戲，否則可改點說明中的 API 文件連結）
 
 若要停止所有服務，開啟 `stop_dev.bat`。
 
@@ -83,6 +83,18 @@ uvicorn main:app --reload
 ```
 
 若要連到不同後端位址（例如 Docker 或遠端主機），可在 Godot 的 **Project → Project Settings → Application → Config** 中設定 `server_url`，或直接編輯 `client/project.godot` 的 `config/server_url`。
+
+### Docker 部署
+
+1. 複製環境變數並依需編輯：`cp server/.env.example server/.env`
+2. 在專案根目錄執行：`docker compose up -d`
+3. 後端 API：`http://localhost:8000`；Launcher Dashboard：`http://localhost:8080`
+4. 世界觀檔案放在 `server/data/`（會掛載進容器）；向量庫存於 Docker volume `airpg_chroma`。
+5. 使用本機 Ollama 時，需在 host 先啟動 Ollama，並在 `.env` 使用 `LLM_MODE=ollama`。若後端在容器內要連 host 的 Ollama，可在 `.env` 加上 `OLLAMA_HOST=http://host.docker.internal:11434`（Windows/Mac Docker Desktop；Linux 可用 host 實際 IP）。
+
+**說明**：Docker 模式下後端以獨立容器常駐，Dashboard 的「啟動伺服器」按鈕不適用；請用 Dashboard 做設定與「更新知識庫 (Ingest)」，遊戲客戶端連線至 `http://localhost:8000`（或 host 對外 IP）。
+
+**Godot Web 遊戲**：將 Godot 專案匯出為 HTML5，輸出目錄設為專案根目錄下的 `dist/`（與 `server/`、`client/` 同層）。啟動 Docker 後，開啟 **http://localhost:8000/game/** 即可在瀏覽器玩。遊戲與 API 同源時，建議在 Godot 匯出前將 `config/server_url` 改為 **`/api/v1/chat/`**（相對路徑），這樣不需額外設定 CORS、且部署到不同網域時可再改回完整網址。
 
 ---
 
@@ -168,8 +180,6 @@ uvicorn main:app --reload
 | [backend_dev_guide.md](docs/backend_dev_guide.md) | 後端開發與架構說明  |
 | [information_flow.md](docs/information_flow.md)   | 端到端資訊流與資料路徑 |
 | [design_rationale.md](docs/design_rationale.md)   | 技術選型與設計決策  |
-| [rag_dev_guide.md](docs/rag_dev_guide.md)         | RAG 引擎開發指南 |
-| [memory_strategy.md](docs/memory_strategy.md)     | 長期記憶策略規劃   |
 | [error_codes.md](docs/error_codes.md)             | 錯誤碼與訊息說明   |
 | [todo.md](docs/todo.md)                           | 詳細任務清單     |
 

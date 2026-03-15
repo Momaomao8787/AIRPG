@@ -1,0 +1,24 @@
+# Virtual env and caches
+server/venv
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+.git
+.gitignore
+.vscode
+.cursor
+
+# Client (Godot) not needed in backend/launcher image
+client
+
+# Persisted at runtime via volumes
+server/chroma_db
+server/.env
+
+# Docs and dev (optional: remove if you want docs in image)
+docs
+*.md
+!server/README.md
+
+# Launcher test
+launcher/test_launcher_server.py
