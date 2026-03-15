@@ -50,6 +50,8 @@ server/
             → 回傳 ChatResponse 給前端
 ```
 
+端到端資訊流（含 Godot 前端與 RAG 內部步驟、get_rag_chain 呼叫關係）請參閱 [information_flow.md](information_flow.md)。
+
 ---
 
 ## 2. 知識庫建置 (Ingestion)
@@ -234,4 +236,6 @@ main.py
 
 ---
 
-*最後更新：2026-03-09*
+> **提示**: 關於更詳盡的錯誤代碼與訊息定義，請參閱 [error_codes.md](error_codes.md)。
+
+*最後更新：2026-03-14*
