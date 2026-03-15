@@ -3,24 +3,26 @@ setlocal
 cd /d %~dp0
 
 echo ==========================================
-echo    AIRPG 停止所有開發服務
+echo    AIRPG Stop All Development Services
 echo ==========================================
 
-:: 1. 停止 uvicorn (後端伺服器)
-echo [系統] 正在尋找並終止 uvicorn 進程...
+:: 1. Stop uvicorn (Backend Server)
+echo [SYSTEM] Searching and terminating uvicorn processes...
 taskkill /F /IM uvicorn.exe /T 2>nul
 if %errorlevel% equ 0 (
-    echo [完成] 已成功關閉後端伺服器。
+    echo [OK] Backend server stopped successfully.
 ) else (
-    echo [提示] 找不到運行中的 uvicorn 伺服器。
+    echo [INFO] No running uvicorn server found.
 )
 
-:: 2. 停止 python (如果有的話，通常 uvicorn 就夠了)
-:: 為了安全起見，我們只針對 python，但不強制殺掉避免影響其他程式
-:: 如果你確定要強力清除，可以取消下面這行註解
-:: taskkill /F /IM python.exe /T 2>nul
+:: 2. Stop Launcher (AIRPG-Launcher)
+echo [SYSTEM] Terminating Launcher service...
+taskkill /F /FI "WINDOWTITLE eq AIRPG-Launcher*" /T 2>nul
+if %errorlevel% equ 0 (
+    echo [OK] Launcher closed.
+)
 
 echo ==========================================
-echo [結束] 所有 AIRPG 相關服務已嘗試關機。
+echo [DONE] All AIRPG related services are closed.
 echo ==========================================
-pause
+exit /b 0

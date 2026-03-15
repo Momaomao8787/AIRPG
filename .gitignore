@@ -13,7 +13,7 @@ dist/
 .godot/
 *.import
 export_presets.cfg
-# 排除匯出資料夾，保持 Repo 只有原始碼
+# 匯出資料夾
 client/export/
 godot.log
 

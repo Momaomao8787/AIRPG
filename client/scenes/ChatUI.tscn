@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://b7v2y3x1w0vat"]
+
+[ext_resource type="Script" uid="uid://ctvhy6g7e066k" path="res://scripts/ChatUI.gd" id="1_a2b3c"]
+
+[node name="ChatUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a2b3c")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="AvatarRect" type="TextureRect" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ChatHistory" type="RichTextLabel" parent="MarginContainer/HBoxContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "System: 歡迎來到 AIRPG！請輸入訊息開始對話。
+"
+scroll_following = true
+
+[node name="InputArea" type="HBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/VBoxContainer/InputArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "輸入你的訊息..."
+
+[node name="SendButton" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/InputArea"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "發送"
+
+[connection signal="text_submitted" from="MarginContainer/HBoxContainer/VBoxContainer/InputArea/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="pressed" from="MarginContainer/HBoxContainer/VBoxContainer/InputArea/SendButton" to="." method="_on_send_button_pressed"]

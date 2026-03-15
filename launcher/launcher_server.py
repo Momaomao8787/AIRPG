@@ -11,6 +11,7 @@ import signal
 import threading
 import time
 import platform
+import atexit
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -25,7 +26,7 @@ LAUNCHER_PORT = 8080
 
 # --- 全域進程狀態 ---
 backend_process = None
-backend_logs = []
+backend_logs: list[str] = []
 log_lock = threading.Lock()
 MAX_LOG_LINES = 200
 
@@ -74,15 +75,7 @@ def get_backend_status() -> dict:
     return {"running": running}
 
 
-def start_backend():
-    """啟動後端伺服器。"""
-    global backend_process, backend_logs
-    if backend_process and backend_process.poll() is None:
-        return {"success": False, "message": "後端已在運行中。"}
-
-    bat_file = SERVER_DIR / "run_server.bat"
-    if not bat_file.exists():
-        return {"success": False, "message": f"找不到 {bat_file}"}
+# --- Backend Process Management ---
 
 def log_reader(proc, prefix=""):
     """讀取子進程輸出並存入全域緩存，加入 Throttling 邏輯處理進度條。"""
@@ -103,6 +96,8 @@ def log_reader(proc, prefix=""):
                 continue
 
             full_line = f"{prefix}{line}"
+            print(full_line, flush=True)  # 同步印出到 Launcher (黑窗)
+
             with log_lock:
                 # Throttling: 如果新行包含百分比 (%)
                 is_progress = "%" in line
@@ -110,7 +105,9 @@ def log_reader(proc, prefix=""):
                     last_line = backend_logs[-1]
                     # 如果前綴相似 (例如 "pulling abc: 10%" vs "pulling abc: 11%")，則蓋過舊行
                     # 這裡簡單判斷：如果最後一行也是進度行，且開頭 15 字元相同
-                    if "%" in last_line and full_line[:15] == last_line[:15]:
+                    str_last = str(last_line)
+                    str_full = str(full_line)
+                    if "%" in str_last and str_full.startswith(str_last[:15]):  # type: ignore
                         backend_logs[-1] = full_line
                     else:
                         backend_logs.append(full_line)
@@ -127,40 +124,63 @@ def start_backend():
     """啟動後端伺服器。"""
     global backend_process, backend_logs
     if backend_process and backend_process.poll() is None:
-        return {"success": False, "message": "後端已在運行中。"}
+        return {"success": False, "message": "Backend is already running."}
 
     bat_file = SERVER_DIR / "run_server.bat"
     if not bat_file.exists():
-        return {"success": False, "message": f"找不到 {bat_file}"}
+        return {"success": False, "message": f"Cannot find {bat_file}"}
 
     with log_lock:
         backend_logs.clear()
+
+    # 設定環境變數，強制 Python 輸出不緩衝
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
 
     backend_process = subprocess.Popen(
         ["cmd.exe", "/c", str(bat_file)],
         cwd=str(SERVER_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        creationflags=subprocess.CREATE_NO_WINDOW if platform.system() == "Windows" else 0,
-        text=False
+        creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0x08000000) if platform.system() == "Windows" else 0,
+        text=False,
+        env=env
     )
     threading.Thread(target=log_reader, args=(backend_process,), daemon=True).start()
     return {"success": True, "message": "Backend service starting..."}
 
 
 def stop_backend():
-    """停止後端伺服器。"""
-    global backend_process
+    """Stop backend server."""
+    global backend_process, backend_logs
     if not backend_process or backend_process.poll() is not None:
-        return {"success": False, "message": "後端目前未在運行。"}
+        msg = "[SYSTEM] Backend service is not running."
+        print(msg, flush=True)
+        with log_lock:
+            backend_logs.append(msg)
+        return {"success": False, "message": "Backend service is not running."}
 
+    msg_stopping = "[SYSTEM] Stopping backend service..."
+    print(msg_stopping, flush=True)
+    with log_lock:
+        backend_logs.append(msg_stopping)
+
+    if backend_process is None:
+        return {"success": False, "message": "Backend service is not running."}
+
+    pid = backend_process.pid
     if platform.system() == "Windows":
-        subprocess.run(["taskkill", "/F", "/T", "/PID", str(backend_process.pid)],
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)],
                        capture_output=True)
     else:
-        os.kill(backend_process.pid, signal.SIGTERM)
+        os.kill(pid, signal.SIGTERM)
 
     backend_process = None
+    msg_stopped = "[SYSTEM] Backend service stopped successfully."
+    print(msg_stopped, flush=True)
+    with log_lock:
+        backend_logs.append(msg_stopped)
+        
     return {"success": True, "message": "Backend service stopped."}
 
 
@@ -168,7 +188,7 @@ def run_ingest():
     """執行知識庫重建腳本。"""
     ingest_script = SERVER_DIR / "app" / "rag" / "ingest.py"
     if not ingest_script.exists():
-        return {"success": False, "message": "找不到 ingest.py"}
+        return {"success": False, "message": "Cannot find ingest.py"}
 
     venv_python = SERVER_DIR / "venv" / "Scripts" / "python.exe"
     python_exec = str(venv_python) if venv_python.exists() else sys.executable
@@ -183,7 +203,7 @@ def run_ingest():
         # Use the global log_reader with a prefix for ingest logs
         log_reader(proc, prefix="[ingest] ")
         with log_lock:
-            backend_logs.append("[ingest] 知識庫更新完畢！")
+            backend_logs.append("[ingest] Knowledge base update complete!")
 
     threading.Thread(target=_run, daemon=True).start()
     return {"success": True, "message": "Knowledge base updating... check logs."}
@@ -280,12 +300,16 @@ class LauncherHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    print(f"[AIRPG Launcher] 啟動中... http://localhost:{LAUNCHER_PORT}")
+    def _stop():
+        stop_backend()
+    atexit.register(_stop)  # type: ignore
+    print(f"[AIRPG Launcher] Server initializing...")
     server = HTTPServer(("0.0.0.0", LAUNCHER_PORT), LauncherHandler)
+    print(f"[AIRPG Launcher] Service ready! Dashboard URL: http://localhost:{LAUNCHER_PORT}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n[AIRPG Launcher] 已關閉。")
+        print("\n[AIRPG Launcher] Closed.")
         server.shutdown()
 
 

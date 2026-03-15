@@ -35,13 +35,12 @@ echo [SYSTEM] Starting AIRPG Control Center
 start "AIRPG-Launcher" "server\venv\Scripts\python.exe" launcher\launcher_server.py
 
 REM 5. Wait for readiness
-echo [SYSTEM] Waiting for console to be ready 8s
-timeout /t 8 /nobreak >nul
+echo [SYSTEM] Waiting for dashboard...
+timeout /t 3 /nobreak >nul
 
 REM 6. Open Browser
 echo [SYSTEM] Opening dashboard
 start "" "http://localhost:8080"
 
 echo [OK] AIRPG Control Center is running at http://localhost:8080.
-echo.
-pause
+exit /b 0
