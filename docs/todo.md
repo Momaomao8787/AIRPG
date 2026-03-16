@@ -43,9 +43,9 @@
 - [x] **Docker 部署**
     - [x] 撰寫 Dockerfile (後端 + Launcher 共用映像)
     - [x] 撰寫 docker-compose.yml (backend + launcher 服務)
-- [ ] 全系統端到端 (E2E) 測試
+- [x] 全系統端到端 (E2E) 測試（API 層 E2E 見 `server/tests/test_e2e_api.py`）
 
-**接下來可執行**：全系統端到端 (E2E) 測試。
+**接下來可執行**：長期記憶支援或 Godot/瀏覽器 E2E（可選）。
 
 ## 第四階段：進階功能開發
 - [ ] **長期記憶支援**

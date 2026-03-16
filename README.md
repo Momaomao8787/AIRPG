@@ -84,6 +84,18 @@ uvicorn main:app --reload
 
 若要連到不同後端位址（例如 Docker 或遠端主機），可在 Godot 的 **Project → Project Settings → Application → Config** 中設定 `server_url`，或直接編輯 `client/project.godot` 的 `config/server_url`。
 
+### 執行測試
+
+於 `server` 目錄下執行單元與 API 層 E2E 測試（無需啟動 Chroma/Ollama）：
+
+```bash
+cd server
+.\venv\Scripts\activate
+python -m unittest discover -s tests -v
+```
+
+涵蓋 RAG 服務單元測試（`test_rag_service.py`）與全 API 路徑 E2E 測試（`test_e2e_api.py`）。
+
 ### Docker 部署
 
 1. 複製環境變數並依需編輯：`cp server/.env.example server/.env`
