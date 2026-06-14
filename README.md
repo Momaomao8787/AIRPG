@@ -176,7 +176,7 @@ python -m unittest discover -s tests -v
 - 對話檢索優化 (調優 RAG 精度)
 - 知識庫上傳管理介面
 
-### 第五階段：體驗展演優化
+### 第五階段：體驗優化
 
 - Godot UI/UX 與動效精雕
 - 串流回傳 (Streaming SSE)
