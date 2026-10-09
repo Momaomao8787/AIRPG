@@ -1,6 +1,21 @@
-# AI Immersive RPG Agent (AIRPG)
+# AI Immersive RPG Agent · AIRPG
 
-一個以 **AI 驅動的沉浸式角色扮演對話系統**，透過 RAG 技術讓 AI 角色嚴格依照「世界觀設定集 (World Bible)」與玩家互動，並以 Godot Engine 提供豐富的前端體驗。
+以 AI 驅動的沉浸式角色扮演對話系統。透過 RAG 讓角色依世界觀設定集回應，後端 FastAPI，前端 Godot 4.4。
+
+## 現況
+
+
+| 項目   | 狀態                                          |
+| ---- | ------------------------------------------- |
+| 狀態   | **可 Demo**：第一～三階段已完成，第四～五階段未做               |
+| 後端   | FastAPI 對話 API、RAG、多供應商 LLM、Launcher、Docker |
+| 前端   | Godot 對話 UI、角色表情、HTTP 串接；可匯出 Web 至 `dist/`  |
+| 本機推論 | Ollama；亦可切雲端                                |
+| 測試   | `server/tests` 單元與 API 層 E2E                |
+| 未做   | 長期記憶 SQLite、RAG 重排調優、SSE 串流、知識庫上傳 UI        |
+
+
+對齊細節見 `[docs/todo.md](docs/todo.md)`。
 
 ---
 
@@ -25,6 +40,8 @@ graph TD
 
 
 
+
+
 ### 技術堆疊
 
 
@@ -40,7 +57,11 @@ graph TD
 
 ---
 
+
+
 ## 快速啟動
+
+
 
 ### 前置需求
 
@@ -50,6 +71,8 @@ graph TD
   - 對話模型：`llama3`（或自選）
   - 嵌入模型：`nomic-embed-text`（RAG 必要）
 - **前端** 請用 Godot Engine 開啟 `client/` 資料夾，按 `F5` 執行，或匯出為 Web (HTML5) 格式。
+
+
 
 ### 使用 Launcher 啟動（推薦）
 
@@ -106,9 +129,11 @@ python -m unittest discover -s tests -v
 
 **說明**：Docker 模式下後端以獨立容器常駐，Dashboard 的「啟動伺服器」按鈕不適用；請用 Dashboard 做設定與「更新知識庫 (Ingest)」，遊戲客戶端連線至 `http://localhost:8000`（或 host 對外 IP）。
 
-**Godot Web 遊戲**：將 Godot 專案匯出為 HTML5，輸出目錄設為專案根目錄下的 `dist/`（與 `server/`、`client/` 同層）。啟動 Docker 後，開啟 **http://localhost:8000/game/** 即可在瀏覽器玩。遊戲與 API 同源時，建議在 Godot 匯出前將 `config/server_url` 改為 **`/api/v1/chat/`**（相對路徑），這樣不需額外設定 CORS、且部署到不同網域時可再改回完整網址。
+**Godot Web 遊戲**：將 Godot 專案匯出為 HTML5，輸出目錄設為專案根目錄下的 `dist/`（與 `server/`、`client/` 同層）。啟動 Docker 後，開啟 **[http://localhost:8000/game/](http://localhost:8000/game/)** 即可在瀏覽器玩。遊戲與 API 同源時，建議在 Godot 匯出前將 `config/server_url` 改為 `**/api/v1/chat/`**（相對路徑），這樣不需額外設定 CORS、且部署到不同網域時可再改回完整網址。
 
 ---
+
+
 
 ## API 規格
 
@@ -146,53 +171,63 @@ python -m unittest discover -s tests -v
 
 ---
 
+
+
 ## 開發進度
 
-### 第一階段：後端核心
+與 `[docs/todo.md](docs/todo.md)` 同步。`[x]` 已完成，`[ ]` 未做。
 
-- Python 環境配置 (venv)
-- FastAPI 核心（`main.py`、`/health`、`POST /api/v1/chat`）
-- RAG 引擎整合（LangChain + ChromaDB + `nomic-embed-text`）
-- 知識庫處理（`ingest.py` 支援 `.md` 文件）
+### 第一階段：後端核心 · 已完成
 
-### 第二階段：開發工具管理
+- [x] Python 環境、FastAPI 核心、`/health`、`POST /api/v1/chat`
+- [x] RAG：LangChain + ChromaDB + `nomic-embed-text`
+- [x] 知識庫 ingest，支援 `.md`
 
-- 一鍵啟動 / 停止腳本（`start_dev.bat` / `stop_dev.bat`）
-- Ollama 自動診斷、啟動與模型下載
-- Launcher Dashboard（進程管理、模型切換、日誌檢視）
-- 環境變數安全管理（`.env`）
-- 增強系統除錯與型別處理 (IDE Warnings Fix)
 
-### 第三階段：前端整合與容器化 (第一版目標)
 
-- Godot 基礎通訊建置 (HTTPRequest)
-- 基本 UI 介面實作 (對話框、角色狀態)
-- **Docker 容器化部署** (Dockerfile & docker-compose)
-- 全系統整合測試
+### 第二階段：開發工具與管理 · 已完成
 
-### 第四階段：進階功能開發
+- [x] `start_dev.bat`／`stop_dev.bat`、Ollama 診斷與模型拉取
+- [x] Launcher Dashboard：進程、模型切換、日誌、進入遊戲
+- [x] `.env` 設定、Godot `server_url` 可設定、`/game` Web 匯出掛載
 
-- **長期記憶支援** (SQLite 儲存歷史上下文)
-- 對話檢索優化 (調優 RAG 精度)
-- 知識庫上傳管理介面
 
-### 第五階段：體驗優化
 
-- Godot UI/UX 與動效精雕
-- 串流回傳 (Streaming SSE)
-- 指令解析 (AI 控制遊戲狀態 JSON)
+### 第三階段：前端整合與容器化 · 已完成
+
+- [x] Godot HTTP 通訊、對話框、角色表情
+- [x] Docker／docker-compose
+- [x] API 層 E2E 測試
+
+
+
+### 第四階段：進階功能 · 未做
+
+- [ ] 長期記憶：SQLite 與歷史檢索
+- [ ] RAG 精度調優：chunking、rerank
+- [ ] Launcher 知識庫上傳／刪除 UI
+
+
+
+### 第五階段：體驗展演 · 未做
+
+- [ ] Godot UI／動效精修
+- [ ] SSE 串流回傳
+- [ ] AI JSON 指令驅動遊戲狀態
 
 ---
+
+
 
 ## 文件
 
 
-| 文件                                                | 說明         |
-| ------------------------------------------------- | ---------- |
-| [backend_dev_guide.md](docs/backend_dev_guide.md) | 後端開發與架構說明  |
+| 文件                                                | 說明          |
+| ------------------------------------------------- | ----------- |
+| [backend_dev_guide.md](docs/backend_dev_guide.md) | 後端開發與架構說明   |
 | [information_flow.md](docs/information_flow.md)   | 端到端資訊流與資料路徑 |
-| [design_rationale.md](docs/design_rationale.md)   | 技術選型與設計決策  |
-| [error_codes.md](docs/error_codes.md)             | 錯誤碼與訊息說明   |
-| [todo.md](docs/todo.md)                           | 詳細任務清單     |
+| [design_rationale.md](docs/design_rationale.md)   | 技術選型與設計決策   |
+| [error_codes.md](docs/error_codes.md)             | 錯誤碼與訊息說明    |
+| [todo.md](docs/todo.md)                           | 詳細任務清單      |
 
 
