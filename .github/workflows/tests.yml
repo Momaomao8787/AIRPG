@@ -1,0 +1,112 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  godot:
+    name: Godot
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot 4.4.1
+        run: |
+          set -euo pipefail
+          GODOT_VERSION="4.4.1-stable"
+          GODOT_ZIP="Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          GODOT_URL="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ZIP}"
+          curl -fsSL -o /tmp/godot.zip "$GODOT_URL"
+          unzip -q -o /tmp/godot.zip -d /tmp/godot
+          GODOT_BIN="/tmp/godot/Godot_v${GODOT_VERSION}_linux.x86_64"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+
+      - name: Run Godot tests
+        if: hashFiles('client/project.godot') != ''
+        run: bash tools/run_godot_tests.sh client
+
+      - name: Skip Godot
+        if: hashFiles('client/project.godot') == ''
+        run: echo "No client/project.godot; skipping Godot job."
+
+  server-pytest:
+    name: Server pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: server/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest httpx
+
+      - name: pytest
+        run: python -m pytest tests/ -v --tb=short
+
+  launcher-unittest:
+    name: Launcher unittest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: unittest
+        run: python -m unittest discover -v -s . -p 'test_*.py'
+
+  vitest:
+    name: Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect frontend tests
+        id: detect
+        run: |
+          if [ -f package.json ] && node -e "const p=require('./package.json'); process.exit(p.scripts&&p.scripts.test?0:1)" 2>/dev/null; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.run == 'true'
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: npm test
+        if: steps.detect.outputs.run == 'true'
+        run: |
+          npm ci
+          npm test
+
+      - name: Skip Vitest
+        if: steps.detect.outputs.run != 'true'
+        run: echo "No package.json test script; skipping Vitest."
