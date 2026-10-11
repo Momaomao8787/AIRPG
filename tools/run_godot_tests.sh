@@ -9,7 +9,7 @@ if [[ ! -f "$PROJECT_DIR/project.godot" ]]; then
   exit 1
 fi
 
-GODOT_OUTPUT_ERROR_PATTERN='SCRIPT ERROR|Parse Error|Failed to load script'
+GODOT_OUTPUT_ERROR_PATTERN='SCRIPT ERROR|Parse Error|Failed to load script|Failed loading resource'
 
 has_output_errors() {
   local log_file="$1"
@@ -30,7 +30,7 @@ run_and_check() {
   local exit_code="${PIPESTATUS[0]}"
   set -e
   if has_output_errors "$log_file"; then
-    echo "FAIL: $label — output contains SCRIPT ERROR, Parse Error, or Failed to load script"
+    echo "FAIL: $label — output contains SCRIPT ERROR, Parse Error, Failed to load script, or Failed loading resource"
     rm -f "$log_file"
     return 1
   fi
